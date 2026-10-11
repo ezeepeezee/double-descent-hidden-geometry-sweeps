@@ -24,12 +24,12 @@ Each frame is one training-set size T. The main window plots the hidden vectors 
 ├── README.md
 ├── LICENSE
 ├── requirements.txt
-├── 2d/
+├── m_2/
 │   ├── run_m_2.ipynb       # m = 2 sweep, plus export for the dashboard
 │   ├── sweep.h5            # raw results (300 values of T)
 │   ├── data.js             # the same results, exported for the dashboard (~51 MB)
 │   └── dashboard_2d.html
-└── 3d/
+└── m_3/
     ├── run_m_3.ipynb       # m = 3 sweep, plus export for the dashboard
     ├── sweep_merged.h5     # raw results (320 values of T)
     ├── data.js             # the same results, exported for the dashboard (~80 MB)
