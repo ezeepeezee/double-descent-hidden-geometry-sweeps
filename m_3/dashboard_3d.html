@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hidden Geometry Sweep (3D)</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="data.js"></script>
+    <style>
+        /* Dark Mode & Centering */
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        #dashboard-container {
+            width: 100%;
+            max-width: 1600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header h1 {
+            font-size: 20px;
+            margin: 0 0 5px 0;
+            font-weight: 600;
+        }
+        
+        header p {
+            font-size: 13px;
+            color: #999;
+            margin: 0 0 20px 0;
+        }
+
+        #main-content {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 10px;
+        }
+
+        #left-panel {
+            flex: 3;
+            position: relative;
+            background-color: #1e1e1e;
+            border: 1px solid #444;
+            border-radius: 6px;
+            height: 750px;
+        }
+
+        #stats-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            pointer-events: none;
+            font-size: 14px;
+            color: #e0e0e0;
+        }
+
+        #stats-overlay h2 {
+            margin: 0 0 10px 0;
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        #stats-overlay div {
+            margin-bottom: 3px;
+        }
+
+        #right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .plot-2d-container h3 {
+            font-size: 14px;
+            margin: 0 0 10px 0;
+            font-weight: 600;
+        }
+
+        #plot-test-loss {
+            height: 250px;
+            background-color: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 6px;
+        }
+
+        #right-stats {
+            font-size: 14px;
+            color: #ccc;
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+
+        #controls-container {
+            margin-top: 5px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            font-size: 13px;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .help-text {
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        button {
+            background-color: #2a2a2a;
+            color: #e0e0e0;
+            border: 1px solid #555;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        button:hover {
+            background-color: #3a3a3a;
+        }
+
+        .primary-btn {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+        }
+
+        .primary-btn:hover {
+            background-color: #1d4ed8;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            max-width: 600px;
+            accent-color: #2563eb;
+        }
+
+        .short-slider {
+            max-width: 100px !important;
+        }
+        
+        .t-value-label {
+            font-weight: bold;
+            margin-left: 10px;
+            min-width: 80px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="dashboard-container">
+    <header>
+        <h1 id="header-title">Hidden Geometry Sweep (3D) — h_i = Wx_i, m=3</h1>
+        <p id="header-subtitle">Loading data...</p>
+    </header>
+
+    <div id="main-content">
+        <!-- 3D Visualization Window -->
+        <div id="left-panel">
+            <div id="stats-overlay">
+                <h2 id="overlay-t">T = --</h2>
+                <div id="overlay-train-loss">train_loss: --</div>
+                <div id="overlay-test-loss">test_loss: --</div>
+                <div id="overlay-n-points">n_points: --</div>
+            </div>
+            <div id="plot-3d" style="width:100%; height:100%;"></div>
+        </div>
+
+        <!-- 2D Graphs & Stats Window -->
+        <div id="right-panel">
+            <div class="plot-2d-container">
+                <h3>Test Loss (zoomed to its own range)</h3>
+                <div id="plot-test-loss"></div>
+            </div>
+            
+            <div id="right-stats">
+                <div id="side-train-loss">train_loss: --</div>
+                <div id="side-test-loss">test_loss: --</div>
+                <div id="side-n-points">n_points: --</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="controls-container">
+        <div class="help-text">Drag to rotate · Scroll to zoom · Right-click drag (or Shift+drag) to pan</div>
+        
+        <div class="control-row">
+            <span>T index</span>
+            <button id="btn-prev">◄ Prev</button>
+            <input type="range" id="slider-t" min="0" max="100" value="0">
+            <button id="btn-next">Next ►</button>
+            <span class="t-value-label" id="label-t">T = --</span>
+        </div>
+        
+        <div class="control-row">
+            <button id="btn-play">► Play</button>
+            <span>Speed</span>
+            <input type="range" id="slider-speed" class="short-slider" min="1" max="10" value="5">
+            <label><input type="checkbox" id="check-loop" checked> Loop</label>
+            <button id="btn-reset">Reset View</button>
+            <button class="primary-btn" id="btn-autofit">Auto-fit</button>
+        </div>
+
+        <div class="control-row">
+            <button>Save Animation</button>
+        </div>
+
+        <div class="control-row">
+            <button>📷 Save Snapshot</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const layoutConfig = {
+        paper_bgcolor: '#1e1e1e',
+        plot_bgcolor: '#1e1e1e',
+        font: { color: '#e0e0e0' }
+    };
+
+    let currentIndex = 0;
+    let playInterval = null;
+    let sweepData = null;
+
+    function initDashboard() {
+        if (typeof SWEEP !== 'undefined') {
+            sweepData = {
+                t_values: SWEEP.map(row => row.I !== undefined ? row.I : row.T),
+                train_loss: SWEEP.map(row => row.train_loss),
+                test_loss: SWEEP.map(row => row.test_loss),
+                geometry: SWEEP.map(row => ({
+                    x: row.H1 || [],
+                    y: row.H2 || [],
+                    z: row.H3 || []
+                })),
+                n_points: SWEEP.map(row => row.H1 ? row.H1.length : 0)
+            };
+        }
+
+        if (!sweepData || typeof sweepData === 'undefined') {
+            console.error("sweepData is not defined. Make sure data.js is loaded correctly.");
+            document.getElementById('header-subtitle').innerText = "Error: data.js not found or SWEEP not defined.";
+            return;
+        }
+
+        const maxIndex = sweepData.t_values.length - 1;
+        
+        document.getElementById('slider-t').max = maxIndex;
+        document.getElementById('header-subtitle').innerText = `${sweepData.t_values.length} T-values from T=${sweepData.t_values[0]} to T=${sweepData.t_values[maxIndex]} · m=3`;
+
+        // Calculate global min and max for Test Loss to keep scale constant
+        const minTestLoss = Math.min(...sweepData.test_loss);
+        const maxTestLoss = Math.max(...sweepData.test_loss);
+        const padding = (maxTestLoss - minTestLoss) * 0.05 || 0.01;
+
+        // Setup Test Loss Graph
+        const traceTestLoss = {
+            x: sweepData.t_values,
+            y: sweepData.test_loss,
+            mode: 'lines',
+            line: { color: '#e63946', width: 1.5 },
+            name: 'Test Loss'
+        };
+
+        const layoutTestLoss = {
+            ...layoutConfig,
+            margin: { l: 40, r: 10, b: 25, t: 10 },
+            xaxis: { gridcolor: '#333', tickfont: { size: 10, color: '#888' } },
+            yaxis: { 
+                gridcolor: '#333', 
+                tickfont: { size: 10, color: '#888' },
+                range: [minTestLoss - padding, maxTestLoss + padding]
+            },
+            showlegend: false
+        };
+
+        Plotly.newPlot('plot-test-loss', [traceTestLoss], layoutTestLoss, {displayModeBar: false});
+
+        // Setup 3D Geometry Graph
+        const layoutGeometry = {
+            ...layoutConfig,
+            margin: { l: 0, r: 0, b: 0, t: 0 },
+            scene: {
+                xaxis: { title: '', showgrid: false, zerolinecolor: '#555', showticklabels: false, backgroundcolor: '#1e1e1e' },
+                yaxis: { title: '', showgrid: false, zerolinecolor: '#555', showticklabels: false, backgroundcolor: '#1e1e1e' },
+                zaxis: { title: '', showgrid: false, zerolinecolor: '#555', showticklabels: false, backgroundcolor: '#1e1e1e' },
+                aspectmode: 'data', // Keeps x, y, z scales equal to prevent distortion
+                camera: { projection: { type: 'orthographic' } }
+            }
+        };
+        
+        Plotly.newPlot('plot-3d', [{
+            x: [], y: [], z: [], mode: 'markers', type: 'scatter3d', marker: { size: 3, color: '#5b9bd5', opacity: 0.8 }
+        }], layoutGeometry, {displayModeBar: false});
+
+        updateDashboard(0);
+        bindControls();
+    }
+
+    function updateDashboard(index) {
+        currentIndex = index;
+        document.getElementById('slider-t').value = index;
+        
+        const t = sweepData.t_values[index];
+        const trLoss = sweepData.train_loss[index].toExponential(3);
+        const teLoss = sweepData.test_loss[index].toExponential(3);
+        const pts = sweepData.n_points[index];
+
+        document.getElementById('label-t').innerText = `T = ${t}`;
+        document.getElementById('overlay-t').innerText = `T = ${t}`;
+        document.getElementById('overlay-train-loss').innerText = `train_loss: ${trLoss}`;
+        document.getElementById('side-train-loss').innerText = `train_loss: ${trLoss}`;
+        document.getElementById('overlay-test-loss').innerText = `test_loss: ${teLoss}`;
+        document.getElementById('side-test-loss').innerText = `test_loss: ${teLoss}`;
+        document.getElementById('overlay-n-points').innerText = `n_points: ${pts}`;
+        document.getElementById('side-n-points').innerText = `n_points: ${pts}`;
+
+        // Update 3D Plot
+        Plotly.react('plot-3d', [{
+            x: sweepData.geometry[index].x,
+            y: sweepData.geometry[index].y,
+            z: sweepData.geometry[index].z,
+            mode: 'markers',
+            type: 'scatter3d',
+            marker: { size: 3, color: '#5b9bd5', opacity: 0.8 }
+        }], document.getElementById('plot-3d').layout);
+
+        // Update Test Loss Marker
+        const yRange = document.getElementById('plot-test-loss').layout.yaxis.range;
+        const markerLine = {
+            x: [t, t],
+            y: yRange,
+            mode: 'lines',
+            line: { color: '#e63946', width: 1, dash: 'dash' },
+            showlegend: false
+        };
+        
+        Plotly.react('plot-test-loss', [
+            { x: sweepData.t_values, y: sweepData.test_loss, mode: 'lines', line: { color: '#e63946', width: 1.5 } },
+            markerLine
+        ], document.getElementById('plot-test-loss').layout);
+    }
+
+    function bindControls() {
+        const sliderT = document.getElementById('slider-t');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+        const btnPlay = document.getElementById('btn-play');
+        const btnReset = document.getElementById('btn-reset');
+        
+        sliderT.addEventListener('input', (e) => {
+            updateDashboard(parseInt(e.target.value));
+        });
+
+        btnPrev.addEventListener('click', () => {
+            if (currentIndex > 0) updateDashboard(currentIndex - 1);
+        });
+
+        btnNext.addEventListener('click', () => {
+            if (currentIndex < sweepData.t_values.length - 1) updateDashboard(currentIndex + 1);
+        });
+
+        btnPlay.addEventListener('click', () => {
+            if (playInterval) {
+                clearInterval(playInterval);
+                playInterval = null;
+                btnPlay.innerText = '► Play';
+            } else {
+                btnPlay.innerText = '⏸ Pause';
+                playInterval = setInterval(() => {
+                    let nextIdx = currentIndex + 1;
+                    if (nextIdx >= sweepData.t_values.length) {
+                        nextIdx = document.getElementById('check-loop').checked ? 0 : currentIndex;
+                        if (nextIdx === currentIndex) {
+                            clearInterval(playInterval);
+                            playInterval = null;
+                            btnPlay.innerText = '► Play';
+                        }
+                    }
+                    updateDashboard(nextIdx);
+                }, 1000 / document.getElementById('slider-speed').value);
+            }
+        });
+
+        if (btnReset) {
+            btnReset.addEventListener('click', () => {
+                const update = {
+                    'scene.camera': { projection: { type: 'orthographic' } }
+                };
+                Plotly.relayout('plot-3d', update);
+            });
+        }
+    }
+
+    window.onload = initDashboard;
+</script>
+</body>
+</html>
