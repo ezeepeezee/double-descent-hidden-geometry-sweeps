@@ -77,4 +77,31 @@ with h5py.File("2d/sweep.h5", "r") as f:
 
 ## Running the code
 
-**Notebooks.** Install the dependencies with `pip install -r requirements.txt` and open the notebook for the dimension you want. Recomputing a full sweep needs a
+**Notebooks.** Install the dependencies with `pip install -r requirements.txt` and open the notebook for the dimension you want. Recomputing a full sweep needs a CUDA GPU and takes days. With the shipped `.h5` file in place, the sweep cell finds every T already complete and finishes immediately, so the notebooks run quickly as shipped. To recompute from scratch, point `H5_PATH` at a new file name.
+
+**Dashboards locally.** Open `2d/dashboard_2d.html` or `3d/dashboard_3d.html` in a browser (the `data.js` next to each file is loaded automatically). Alternatively, serve the repository folder:
+
+```
+python -m http.server 8000
+```
+
+then open `http://localhost:8000/2d/dashboard_2d.html` or `http://localhost:8000/3d/dashboard_3d.html`. The dashboards load D3 v7.9.0 from a CDN, so the first load needs an internet connection.
+
+## Notes and caveats
+
+- For each T the model with the lowest **training** loss is kept (best of 3 seeds). This selection can favor memorizing solutions in the transition region.
+- TF32 matrix multiplication is enabled on CUDA, so results are not bit-exact across hardware.
+- The hidden-geometry demo cell in each notebook trains several models at full fidelity and is slow.
+
+## Dimensionality metrics (work in progress)
+
+The data files include `D_feat` and `D_data`, computed by the legacy metric functions in each notebook. The dashboards do not display them. They are a variant of the dimensionality measure from Elhage et al. (2022) and Henighan et al. (2023), not an exact reimplementation, and they are not used in the reported results. Treat them as exploratory. The current implementation builds full pairwise cosine-similarity matrices (n_features × n_features and T × T), which limits how far it scales. An improved metric, intended to generalize to n dimensions and to track feature collapse more reliably, is under development and is not part of this release.
+
+## References
+
+- Henighan, T., Carter, S., Hume, T., Elhage, N., Lasenby, R., Fort, S., Schiefer, N., Olah, C. (2023). [Superposition, Memorization, and Double Descent](https://transformer-circuits.pub/2023/toy-double-descent/index.html). Transformer Circuits Thread.
+- Elhage, N., et al. (2022). [Toy Models of Superposition](https://arxiv.org/abs/2209.10652). arXiv:2209.10652.
+
+## License
+
+Released under the MIT License (see `LICENSE`).
