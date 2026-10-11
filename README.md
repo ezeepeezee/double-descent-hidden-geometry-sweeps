@@ -4,8 +4,8 @@ A replication and extension of the toy model in [Henighan et al. (2023), *Superp
 
 ## Live interactive dashboards
 
-- [2D sweep (m = 2)](https://github.com/ezeepeezee/double-descent-hidden-geometry-sweeps/blob/main/m_2/dashboard_2d.html)
-- [3D sweep (m = 3)](https://github.com/ezeepeezee/double-descent-hidden-geometry-sweeps/blob/main/m_3/dashboard_3d.html)
+- [2D sweep (m = 2)](https://ezeepeezee.github.io/double-descent-hidden-geometry-sweeps/m_2/dashboard_2d.html)
+- [3D sweep (m = 3)](https://ezeepeezee.github.io/double-descent-hidden-geometry-sweeps/m_3/dashboard_3d.html)
 
 The data files are large, so the first load can take a while, especially on mobile.
 
