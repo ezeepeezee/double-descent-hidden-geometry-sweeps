@@ -4,10 +4,10 @@ A replication and extension of the toy model in [Henighan et al. (2023), *Superp
 
 ## Live interactive dashboards
 
-- [2D sweep (m = 2)](https://<username>.github.io/<repo>/2d/dashboard_2d.html)
-- [3D sweep (m = 3)](https://<username>.github.io/<repo>/3d/dashboard_3d.html)
+- [2D sweep (m = 2)](https://github.com/ezeepeezee/double-descent-hidden-geometry-sweeps/blob/main/m_2/dashboard_2d.html)
+- [3D sweep (m = 3)](https://github.com/ezeepeezee/double-descent-hidden-geometry-sweeps/blob/main/m_3/dashboard_3d.html)
 
-The data files are large (about 51 MB for 2D and 80 MB for 3D), so the first load can take a while, especially on mobile.
+The data files are large, so the first load can take a while, especially on mobile.
 
 ### What the dashboards show
 
